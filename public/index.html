@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitCord Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-zinc-950 text-zinc-100 font-sans">
+    <nav class="border-b border-zinc-800 p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-indigo-500">GitCord</h1>
+            <div id="status" class="text-sm text-zinc-400">Loading system status...</div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto p-8">
+        <section id="stats" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <!-- Stats cards will be injected here -->
+        </section>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <section id="repositories">
+                <h2 class="text-xl font-semibold mb-4">Registered Repositories</h2>
+                <div class="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-zinc-800 text-xs uppercase text-zinc-400">
+                            <tr>
+                                <th class="p-4">Repository</th>
+                                <th class="p-4">Channel</th>
+                            </tr>
+                        </thead>
+                        <tbody id="repo-list">
+                            <!-- Repos will be injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="leaderboard">
+                <h2 class="text-xl font-semibold mb-4">Top Contributors</h2>
+                <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-6" id="contributor-list">
+                    <!-- Leaderboard will be injected here -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>

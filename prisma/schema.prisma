@@ -1,0 +1,42 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Guild {
+  id           String       @id
+  name         String
+  repositories Repository[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model Repository {
+  id            String   @id @default(uuid())
+  guildId       String
+  name          String
+  fullName      String
+  channelId     String
+  webhookSecret String
+  guild         Guild    @relation(fields: [guildId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([guildId, fullName])
+}
+
+model Contributor {
+  id        String   @id @default(uuid())
+  username  String   @unique
+  avatarUrl String?
+  commits   Int      @default(0)
+  prs       Int      @default(0)
+  issues    Int      @default(0)
+  stars     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
