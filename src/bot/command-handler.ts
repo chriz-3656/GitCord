@@ -1,11 +1,14 @@
 import {
   REST,
   Routes,
-  Client,
   ChatInputCommandInteraction,
   Collection,
 } from 'discord.js';
 import { RegisterRepoCommand } from '../commands/register-repo.js';
+import { ListReposCommand } from '../commands/list-repos.js';
+import { RemoveRepoCommand } from '../commands/remove-repo.js';
+import { LeaderboardCommand } from '../commands/leaderboard.js';
+import { ShowcaseCommand } from '../commands/showcase.js';
 import pino from 'pino';
 
 const logger = (pino as any)({
@@ -17,6 +20,10 @@ export class CommandHandler {
 
   constructor() {
     this.commands.set(RegisterRepoCommand.data.name, RegisterRepoCommand);
+    this.commands.set(ListReposCommand.data.name, ListReposCommand);
+    this.commands.set(RemoveRepoCommand.data.name, RemoveRepoCommand);
+    this.commands.set(LeaderboardCommand.data.name, LeaderboardCommand);
+    this.commands.set(ShowcaseCommand.data.name, ShowcaseCommand);
   }
 
   async registerCommands() {
