@@ -1,7 +1,21 @@
-import { EmbedBuilder } from 'discord.js';
+export declare enum SecuritySeverity {
+    CRITICAL = "CRITICAL",
+    HIGH = "HIGH",
+    MEDIUM = "MEDIUM",
+    LOW = "LOW"
+}
+export interface SecurityIssue {
+    type: string;
+    severity: SecuritySeverity;
+    description: string;
+    remediation: string;
+    details?: string;
+}
 export declare class SecurityService {
     private static readonly SECRET_PATTERNS;
-    static scanPayload(content: string): string[];
-    static createSecurityAlertEmbed(repoFullName: string, alerts: string[], pusher: string): EmbedBuilder;
-    static isSuspiciousActivity(event: any, eventType: string): string | null;
+    private static readonly DANGEROUS_FILES;
+    static detectSecurityIssues(content: string, commits?: any[], changedFiles?: string[]): SecurityIssue[];
+    static isSuspiciousActivity(event: any, eventType: string): SecurityIssue | null;
+    static getSeverityColor(severity: SecuritySeverity): number;
+    static getSeverityBadge(severity: SecuritySeverity): string;
 }

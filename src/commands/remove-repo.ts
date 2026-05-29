@@ -1,8 +1,4 @@
-import {
-  SlashCommandBuilder,
-  ChatInputCommandInteraction,
-  PermissionFlagsBits,
-} from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction, PermissionFlagsBits } from 'discord.js';
 import { RepositoryService } from '../database/repository-service.js';
 
 export const RemoveRepoCommand = {

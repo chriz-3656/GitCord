@@ -38,6 +38,37 @@ export class RepositoryService {
     });
   }
 
+  static async updateMetadata(
+    id: string,
+    data: {
+      bannerUrl?: string;
+      description?: string;
+      techStack?: string;
+      status?: string;
+      category?: string;
+    },
+  ) {
+    return prisma.repository.update({
+      where: { id },
+      data,
+    });
+  }
+
+  static async getRepositoryWithStats(id: string) {
+    return prisma.repository.findUnique({
+      where: { id },
+      include: {
+        _count: {
+          select: {
+            interactions: true,
+            followers: true,
+            comments: true,
+          },
+        },
+      },
+    });
+  }
+
   static async getRepositoryByFullName(fullName: string) {
     return prisma.repository.findFirst({
       where: { fullName },

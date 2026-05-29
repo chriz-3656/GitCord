@@ -28,6 +28,26 @@ export class RepositoryService {
             },
         });
     }
+    static async updateMetadata(id, data) {
+        return prisma.repository.update({
+            where: { id },
+            data,
+        });
+    }
+    static async getRepositoryWithStats(id) {
+        return prisma.repository.findUnique({
+            where: { id },
+            include: {
+                _count: {
+                    select: {
+                        interactions: true,
+                        followers: true,
+                        comments: true,
+                    },
+                },
+            },
+        });
+    }
     static async getRepositoryByFullName(fullName) {
         return prisma.repository.findFirst({
             where: { fullName },

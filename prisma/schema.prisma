@@ -22,7 +22,21 @@ model Repository {
   fullName      String
   channelId     String
   webhookSecret String
+  
+  // Showcase metadata
+  bannerUrl     String?
+  description   String?
+  techStack     String?
+  status        String   @default("Active Development")
+  category      String?
+
+  // Relations
   guild         Guild    @relation(fields: [guildId], references: [id])
+  interactions  ProjectInteraction[]
+  followers     ProjectFollower[]
+  comments      ShowcaseComment[]
+  analytics     ProjectAnalytics[]
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -30,13 +44,148 @@ model Repository {
 }
 
 model Contributor {
-  id        String   @id @default(uuid())
-  username  String   @unique
-  avatarUrl String?
-  commits   Int      @default(0)
-  prs       Int      @default(0)
-  issues    Int      @default(0)
-  stars     Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(uuid())
+  discordId     String?  @unique
+  username      String   @unique
+  avatarUrl     String?
+  reputation    Int      @default(0)
+  
+  // Stats
+  commits       Int      @default(0)
+  prs           Int      @default(0)
+  issues        Int      @default(0)
+  stars         Int      @default(0)
+  mergedPrs     Int      @default(0)
+  helpfulReviews Int     @default(0)
+
+  // Relations
+  achievements  ContributorAchievement[]
+  interactions  ProjectInteraction[]
+  followers     ProjectFollower[]
+  comments      ShowcaseComment[]
+  pref          NotificationPreference?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ProjectInteraction {
+  id           String      @id @default(uuid())
+  type         String      // LIKE, BOOKMARK, INTERESTED
+  repositoryId String
+  contributorId String
+  repository   Repository  @relation(fields: [repositoryId], references: [id])
+  contributor  Contributor @relation(fields: [contributorId], references: [id])
+  createdAt    DateTime    @default(now())
+
+  @@unique([type, repositoryId, contributorId])
+}
+
+model ProjectFollower {
+  id           String      @id @default(uuid())
+  repositoryId String
+  contributorId String
+  repository   Repository  @relation(fields: [repositoryId], references: [id])
+  contributor  Contributor @relation(fields: [contributorId], references: [id])
+  createdAt    DateTime    @default(now())
+
+  @@unique([repositoryId, contributorId])
+}
+
+model ShowcaseComment {
+  id           String      @id @default(uuid())
+  content      String
+  repositoryId String
+  contributorId String
+  repository   Repository  @relation(fields: [repositoryId], references: [id])
+  contributor  Contributor @relation(fields: [contributorId], references: [id])
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model Achievement {
+  id           String      @id @default(uuid())
+  name         String      @unique
+  description  String
+  icon         String      
+  rarity       String      @default("COMMON")
+  contributors ContributorAchievement[]
+}
+
+model ContributorAchievement {
+  id            String      @id @default(uuid())
+  contributorId String
+  achievementId String
+  contributor   Contributor @relation(fields: [contributorId], references: [id])
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
+  awardedAt     DateTime    @default(now())
+
+  @@unique([contributorId, achievementId])
+}
+
+model ProjectAnalytics {
+  id           String      @id @default(uuid())
+  repositoryId String
+  date         DateTime    @default(now())
+  eventCount   Int         @default(0)
+  starCount    Int         @default(0)
+  forkCount    Int         @default(0)
+  repository   Repository  @relation(fields: [repositoryId], references: [id])
+
+  @@unique([repositoryId, date])
+}
+
+model NotificationPreference {
+  id            String      @id @default(uuid())
+  contributorId String      @unique
+  contributor   Contributor @relation(fields: [contributorId], references: [id])
+  silentMode    Boolean     @default(false)
+  pingOnRelease Boolean     @default(true)
+  pingOnMention Boolean     @default(true)
+}
+
+model AICache {
+  id           String      @id @default(uuid())
+  cacheKey     String      @unique
+  analysisType String      // summarization, changelog, health, readme, contributors, risk
+  contentHash  String
+  result       String
+  provider     String      @default("gemini")
+  ttl          DateTime
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model GuildAISettings {
+  id           String      @id @default(uuid())
+  guildId      String      @unique
+  primaryProvider String   @default("gemini")  // gemini or openai
+  aiEnabled    Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+}
+
+model Release {
+  id            String      @id @default(uuid())
+  releaseId     String      @unique            // GitHub release ID (unique)
+  repoId        String                         // Repository identifier
+  version       String                         // Version number
+  tagName       String                         // Git tag name
+  title         String                         // Release title
+  description   String      @db.Text           // Release description
+  body          String      @db.Text           // Full release notes body
+  author        String                         // Release author login
+  authorUrl     String?                        // Author profile URL
+  authorAvatar  String?                        // Author avatar URL
+  releasedAt    DateTime                       // Release timestamp
+  isDraft       Boolean     @default(false)
+  isPrerelease  Boolean     @default(false)
+  assets        Json        @default("[]")     // JSON array of download links
+  releaseUrl    String                         // GitHub release URL
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  @@index([repoId])
+  @@index([releasedAt])
 }

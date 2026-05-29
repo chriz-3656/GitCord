@@ -1,14 +1,12 @@
-import {
-  REST,
-  Routes,
-  ChatInputCommandInteraction,
-  Collection,
-} from 'discord.js';
+import { REST, Routes, ChatInputCommandInteraction, Collection } from 'discord.js';
 import { RegisterRepoCommand } from '../commands/register-repo.js';
 import { ListReposCommand } from '../commands/list-repos.js';
 import { RemoveRepoCommand } from '../commands/remove-repo.js';
 import { LeaderboardCommand } from '../commands/leaderboard.js';
 import { ShowcaseCommand } from '../commands/showcase.js';
+import { ProfileCommand } from '../commands/profile.js';
+import { GoodFirstIssuesCommand } from '../commands/good-first-issues.js';
+import { NotificationSettingsCommand } from '../commands/notification-settings.js';
 import pino from 'pino';
 
 const logger = (pino as any)({
@@ -24,6 +22,9 @@ export class CommandHandler {
     this.commands.set(RemoveRepoCommand.data.name, RemoveRepoCommand);
     this.commands.set(LeaderboardCommand.data.name, LeaderboardCommand);
     this.commands.set(ShowcaseCommand.data.name, ShowcaseCommand);
+    this.commands.set(ProfileCommand.data.name, ProfileCommand);
+    this.commands.set(GoodFirstIssuesCommand.data.name, GoodFirstIssuesCommand);
+    this.commands.set(NotificationSettingsCommand.data.name, NotificationSettingsCommand);
   }
 
   async registerCommands() {

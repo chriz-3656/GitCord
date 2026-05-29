@@ -28,9 +28,7 @@ export const ListReposCommand = {
       const embed = new EmbedBuilder()
         .setTitle('📦 Registered Repositories')
         .setColor(0x5865f2)
-        .setDescription(
-          repos.map((r) => `• **${r.fullName}** -> <#${r.channelId}>`).join('\n'),
-        )
+        .setDescription(repos.map((r) => `• **${r.fullName}** -> <#${r.channelId}>`).join('\n'))
         .setTimestamp();
 
       await interaction.reply({ embeds: [embed], ephemeral: true });

@@ -16,7 +16,9 @@ import { CommandHandler } from './bot/command-handler.js';
 import { RepositoryService } from './database/repository-service.js';
 import { ContributorService } from './database/contributor-service.js';
 import { SecurityService } from './security/security-service.js';
+import { SecurityAlertService } from './services/security-alert-service.js';
 import { AIService } from './services/ai-service.js';
+import { ReleaseService } from './services/release-service.js';
 import { prisma } from './database/prisma.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -103,19 +105,67 @@ app.post('/webhooks/github', async (req: any, res) => {
     let embed;
     const channel = (await client.channels.fetch(repoConfig.channelId)) as TextChannel;
 
-    // Security Scanning
+    // Enhanced Security Scanning
     const rawPayloadString = JSON.stringify(req.body);
-    const securityAlerts = SecurityService.scanPayload(rawPayloadString);
+
+    // Extract commits and changed files from the event
+    let commits = [];
+    let changedFiles = [];
+
+    if (event === 'push') {
+      commits = req.body.commits || [];
+      changedFiles = [];
+      // Collect all changed files from commits
+      if (commits) {
+        for (const commit of commits) {
+          changedFiles.push(
+            ...(commit.added || []),
+            ...(commit.modified || []),
+            ...(commit.removed || []),
+          );
+        }
+      }
+    }
+
+    // Detect security issues
+    const securityIssues = SecurityService.detectSecurityIssues(
+      rawPayloadString,
+      commits,
+      changedFiles,
+    );
     const suspiciousActivity = SecurityService.isSuspiciousActivity(req.body, event);
 
-    if (securityAlerts.length > 0 || suspiciousActivity) {
-      const securityEmbed = SecurityService.createSecurityAlertEmbed(
+    // Combine all issues
+    const allIssues = [...securityIssues, ...(suspiciousActivity ? [suspiciousActivity] : [])];
+
+    // Send security alerts if issues found
+    if (allIssues.length > 0) {
+      const alertData = await SecurityAlertService.formatSecurityAlert(
         repoFullName,
-        securityAlerts.length > 0 ? securityAlerts : [suspiciousActivity!],
-        req.body.sender?.login || 'Unknown',
+        allIssues,
+        req.body.sender?.login || req.body.pusher?.name || 'Unknown',
+        event === 'push' ? req.body.commits?.[0]?.id : undefined,
       );
-      await channel.send({ embeds: [securityEmbed] });
-      logger.warn(`Security alert triggered for ${repoFullName}`);
+
+      // Send security alerts to the main channel or security-alerts channel if available
+      let securityChannel = channel;
+      try {
+        // Try to find a security-alerts channel
+        const guild = channel.guild;
+        const securityAlerts = guild.channels.cache.find(
+          (ch) => ch.isTextBased() && ch.name === 'security-alerts',
+        );
+        if (securityAlerts) {
+          securityChannel = securityAlerts as TextChannel;
+        }
+      } catch (e) {
+        // If we can't find security-alerts channel, use the main channel
+      }
+
+      await securityChannel.send({ embeds: alertData.embeds });
+      logger.warn(
+        `Security alert triggered for ${repoFullName}: ${allIssues.length} issue(s) found`,
+      );
     }
 
     switch (event) {
@@ -146,10 +196,7 @@ app.post('/webhooks/github', async (req: any, res) => {
       }
       case 'issues': {
         const data = IssuesEventSchema.parse(req.body);
-        const aiAnalysis = await AIService.analyzeIssue(
-          data.issue.title,
-          data.issue.body || '',
-        );
+        const aiAnalysis = await AIService.analyzeIssue(data.issue.title, data.issue.body || '');
         embed = EmbedService.createIssueEmbed(data, aiAnalysis);
         // Track stats
         await ContributorService.updateStats({
@@ -168,6 +215,72 @@ app.post('/webhooks/github', async (req: any, res) => {
           avatarUrl: data.sender.avatar_url,
           type: 'star',
         });
+        break;
+      }
+      case 'release': {
+        const releaseData = await ReleaseService.parseReleaseWebhook(req.body);
+        
+        if (releaseData) {
+          // Track release in database
+          await ReleaseService.trackRelease(releaseData);
+          
+          // Generate announcement embed
+          embed = ReleaseService.generateReleaseAnnouncement(releaseData);
+          
+          // Try to find and post to releases channel
+          try {
+            const guild = channel.guild;
+            const releaseType = ReleaseService['determineReleaseType'](
+              releaseData.version,
+              releaseData.isPrerelease,
+            );
+            const targetChannelName = ReleaseService['determineReleaseChannel'](
+              releaseType,
+              releaseData.isDraft,
+            );
+            
+            const releaseChannel = guild.channels.cache.find(
+              (ch) => ch.isTextBased() && ch.name === targetChannelName,
+            );
+            
+            if (releaseChannel) {
+              const releaseMsg = await (releaseChannel as any).send({ embeds: [embed] });
+              
+              // Pin stable releases
+              if (ReleaseService['shouldPinRelease'](releaseType)) {
+                try {
+                  await releaseMsg.pin();
+                  logger.info(`Pinned stable release: ${releaseData.version}`);
+                } catch (pinError) {
+                  logger.warn(`Could not pin release message: ${(pinError as any).message}`);
+                }
+              }
+              
+              // Create thread for stable releases
+              if (ReleaseService['shouldCreateThread'](releaseType)) {
+                try {
+                  await releaseMsg.startThread({
+                    name: `📝 Discussion: ${releaseData.version}`,
+                    autoArchiveDuration: 1440, // 24 hours
+                  });
+                  logger.info(`Created discussion thread for release: ${releaseData.version}`);
+                } catch (threadError) {
+                  logger.warn(`Could not create thread: ${(threadError as any).message}`);
+                }
+              }
+              
+              logger.info(`Posted release announcement to ${targetChannelName}`);
+            } else {
+              // Post to main channel if target channel not found
+              await channel.send({ embeds: [embed] });
+              logger.info(`Release channel ${targetChannelName} not found, posted to main channel`);
+            }
+          } catch (channelError) {
+            // Fallback to main channel
+            await channel.send({ embeds: [embed] });
+            logger.info(`Error finding release channel, posted to main channel`);
+          }
+        }
         break;
       }
       default:
@@ -192,9 +305,51 @@ client.once('ready', async () => {
   await commandHandler.registerCommands();
 });
 
+import { EngagementService } from './database/engagement-service.js';
+
 client.on('interactionCreate', async (interaction: Interaction) => {
-  if (!interaction.isChatInputCommand()) return;
-  await commandHandler.handleInteraction(interaction);
+  if (interaction.isChatInputCommand()) {
+    await commandHandler.handleInteraction(interaction);
+    return;
+  }
+
+  if (interaction.isButton()) {
+    const [action, repoId] = interaction.customId.split('_');
+    const user = interaction.user;
+
+    // Get or create contributor
+    const contributor = await ContributorService.getOrCreateByDiscordId(
+      user.id,
+      user.username,
+      user.displayAvatarURL(),
+    );
+
+    try {
+      if (action === 'like') {
+        const result = await EngagementService.toggleLike(repoId, contributor.id);
+        await interaction.reply({
+          content: result.action === 'added' ? '❤️ You liked this project!' : '💔 Removed like.',
+          ephemeral: true,
+        });
+      } else if (action === 'follow') {
+        const result = await EngagementService.toggleFollow(repoId, contributor.id);
+        await interaction.reply({
+          content:
+            result.action === 'added' ? '🔔 You are now following this project!' : '🔕 Unfollowed.',
+          ephemeral: true,
+        });
+      } else if (action === 'interest') {
+        await interaction.reply({
+          content: '🤝 Your interest has been noted! The owner will be notified.',
+          ephemeral: true,
+        });
+        // Phase 2: Smart Notification logic would go here
+      }
+    } catch (error) {
+      logger.error('Button interaction error:', error);
+      await interaction.reply({ content: '❌ Failed to process interaction.', ephemeral: true });
+    }
+  }
 });
 
 // Start application
