@@ -1,97 +1,192 @@
 # 🤖 GitCord
 
-GitCord is a production-ready Discord bot that integrates GitHub repositories with Discord communities. It serves as a webhook relay, developer community platform, and security monitor.
+GitCord is a Discord bot for GitHub communities. It relays webhooks, showcases projects, tracks contributor reputation, surfaces good first issues, and now ships rich Discord **Components V2** cards for its most important views.
 
-## 📂 Documentation
-- [🚀 Features & Modules](./docs/FEATURES.md) - Deep dive into what GitCord can do.
-- [🛠️ Detailed Setup](./docs/SETUP.md) - Step-by-step installation guide.
-- [📜 Changelog](./docs/CHANGELOG.md) - Development history and versions.
+## What’s new
 
-## 🚀 Quick Start
-1. `docker-compose up -d`
-2. `npm install`
-3. `npx prisma db push`
-4. `npm run dev`
+- **Components V2 UI** for showcases, leaderboards, profiles, issue discovery, release announcements, security alerts, repository lists, and notification settings
+- **Phase 5 security monitoring** with severity-based alerts
+- **AI expansion** with Gemini + OpenAI fallback support
+- **Release tracking** with automatic Discord announcements
+- **Phase 4 engagement system** with likes, follows, bookmarks, interested tracking, and anti-spam cooldowns
 
-## 📋 Core Commands
-- `/register-repo` - Connect a repo to a channel.
-- `/list-repos` - See all active connections.
-- `/showcase` - Share your project.
-- `/profile` - View your developer profile with achievements and stats.
-- `/good-first-issues` - Discover beginner-friendly issues by language.
-- `/leaderboard` - View rankings (Top Contributors, Trending Repos, Most Starred, etc.).
-- `/notification-settings` - Configure engagement notifications and cooldowns.
+## Documentation
 
-## 🎯 Phase 5: Complete DevSecOps & AI System
+- [Features & Modules](./docs/FEATURES.md)
+- [Detailed Setup](./docs/SETUP.md)
+- [Changelog](./docs/CHANGELOG.md)
 
-### 🔐 Enhanced Security Monitoring
-- **Automatic vulnerability detection**: Exposed API keys, .env leaks, dangerous file changes
-- **Severity-based alerts**: CRITICAL, HIGH, MEDIUM, LOW with color-coded Discord embeds
-- **Real-time scanning**: All GitHub webhooks scanned automatically
-- **Rich security reports**: Detailed findings with remediation guidance
+## Quick start
 
-### 🤖 AI System Expansion
-- **Multi-provider support**: Gemini (primary) + OpenAI (fallback)
-- **6 new AI capabilities**:
-  - Commit summarization
-  - Changelog generation
-  - Project health analysis
-  - README quality evaluation
-  - Contributor insights
-  - Risk analysis
-- **Result caching**: 24-hour TTL reduces API costs
+1. Start PostgreSQL:
+   ```bash
+   docker-compose up -d
+   ```
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Push the Prisma schema:
+   ```bash
+   npx prisma db push
+   ```
+4. Start development mode:
+   ```bash
+   npm run dev
+   ```
 
-### 📦 Release Tracking
-- **Automatic release announcements**: GitHub releases auto-posted to Discord
-- **Rich embed format**: Version, changelog, download links, GitHub stats
-- **Release badges**: STABLE, BETA, RC, PRERELEASE detection
-- **Smart routing**: Pinning stable releases, threading for patches
+## Environment variables
 
-## 🎮 Phase 4: Discovery & Networking (Complete)
+| Variable | Required | Purpose |
+| --- | --- | --- |
+| `DISCORD_TOKEN` | Yes | Discord bot token |
+| `DISCORD_CLIENT_ID` | Yes | Application client ID |
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `GITHUB_WEBHOOK_SECRET` | Yes | GitHub webhook signature secret |
+| `GITHUB_TOKEN` | Recommended | GitHub API access for releases/issues |
+| `GEMINI_API_KEY` | Yes | Gemini AI provider |
+| `OPENAI_API_KEY` | Optional | OpenAI fallback provider |
+| `PORT` | No | Express server port |
 
-### 📊 Advanced Leaderboards
-7 leaderboard types: Top Contributors, Trending Repos, Most Starred, Most Active, Repo of the Week, Hall of Fame, Weekly/Monthly/Seasonal rankings. Weighted scoring: commits (1pt) + PRs (5pts) + issues (3pts) + reviews (2pts) + stars (1pt).
+## How to use the bot
 
-### ❤️ Smart Engagement System
-- **Like** repositories (❤️, 30-min cooldown)
-- **Bookmark** projects (🔖, 1-hour cooldown)
-- **Mark as Interested** (👀, 2-hour cooldown)
-- **Follow** projects (🔔, 1-hour cooldown)
-- **Comment** on showcases (💭, 15-min cooldown)
-- Anti-spam cooldowns prevent notification spam
+### 1. Register a repository
+Use `/register-repo` to connect a GitHub repository to a Discord channel.
 
-### 🏅 Achievement & Badge System
-8-badge achievement system with rarity tiers (COMMON, RARE, EPIC, LEGENDARY). Auto-awarded based on milestones. Displayed on `/profile` with tier progression.
+- Enter the repository as `owner/repo`
+- Select the channel that should receive webhook updates
+- GitCord stores the webhook secret and uses it to validate GitHub requests
 
-### 📢 Live Activity Feeds
-Auto-managed channels:
-- `#trending-projects` - Top repos by activity
-- `#security-alerts` - DevSecOps findings
-- `#weekly-recaps` - Weekly summaries with statistics
-- `#new-repositories` - Newly registered repos
-- `#good-first-issues` - Beginner opportunities
-- `#releases` - Release announcements
+### 2. Send project updates
+Use `/showcase` to publish or update a project card.
 
-## 🛡️ Security
-- **Automatic credential scanning**: All GitHub webhooks validated with signature verification
-- **Threat detection**: API keys, leaked .env files, suspicious commits, dangerous file changes
-- **Severity-based alerts**: CRITICAL 🔴, HIGH 🟠, MEDIUM 🟡, LOW 🔵
-- **Production-ready**: Comprehensive error handling and logging
+Recommended fields:
+- `repo-full-name` — required `owner/repo`
+- `description` — short project summary
+- `tech-stack` — e.g. `Node.js, Prisma, Discord.js`
+- `status` — Active Development / Looking for Contributors / Beta Testing / Maintenance Mode / Archived
+- `banner-url` — optional project banner image
+- `request-role` — optional contributor role request
 
-## 🏗️ Architecture
-- **TypeScript strict mode** - Full type safety
-- **Service-based design** - Modular, extensible architecture
-- **Prisma ORM** - PostgreSQL database with migrations
-- **Discord.js v14** - Modern Discord bot framework
-- **Production-ready** - Tested, scalable, maintainable
+The showcase card includes:
+- repository title and description
+- GitHub link buttons
+- like/follow/interested actions
+- project metadata and banner imagery when available
 
-## 🚀 Technology Stack
-- **Runtime**: Node.js (TypeScript + tsx)
-- **Database**: PostgreSQL (Docker + Prisma)
-- **Discord**: discord.js v14
-- **GitHub**: Octokit + GitHub APIs
-- **AI**: Google Gemini + OpenAI (fallback)
-- **Code Quality**: ESLint + Prettier (strict)
+### 3. Discover contributors and projects
+- `/leaderboard` shows ranked views like top contributors, trending repositories, most starred projects, repo of the week, and category rankings
+- `/profile` shows reputation, contributions, badges, and tier progress
+- `/good-first-issues` finds beginner-friendly issues from registered repositories or by language
 
-## 📄 License
+### 4. Configure notifications
+Use `/notification-settings` to control how GitCord pings you.
+
+Available options:
+- silent mode
+- release notifications
+- mention notifications
+
+This works with the anti-spam cooldown system so repeat interactions stay quiet when needed.
+
+### 5. Follow projects naturally
+Project cards now include built-in interaction buttons:
+- Like
+- Follow
+- Interested
+
+These feed the engagement system and power repository stats, leaderboards, and notifications.
+
+## Command reference
+
+| Command | Purpose |
+| --- | --- |
+| `/register-repo` | Register a repository and webhook channel |
+| `/list-repos` | Show repositories registered in the server |
+| `/remove-repo` | Remove a repository registration |
+| `/showcase` | Publish/update a project showcase card |
+| `/profile` | View contributor profile, tier, badges, and stats |
+| `/leaderboard` | View contributor/repository rankings |
+| `/good-first-issues` | Find beginner-friendly issues |
+| `/notification-settings` | Manage your notification preferences |
+
+## Automatic bot features
+
+### Security monitoring
+GitCord scans webhook payloads for:
+- exposed API keys
+- leaked `.env` files
+- private keys
+- database connection strings
+- dangerous file changes
+- suspicious commits and force pushes
+
+Alerts are severity-tagged:
+- **CRITICAL**
+- **HIGH**
+- **MEDIUM**
+- **LOW**
+
+### AI analysis
+GitCord can generate:
+- PR summaries
+- commit summaries
+- changelog snippets
+- project health analysis
+- README analysis
+- contributor insights
+- risk analysis
+
+### Release tracking
+GitHub release webhooks are tracked and announced automatically with:
+- version tag
+- changelog
+- download links
+- release type badges
+- stable release pinning and discussion threads
+
+### Live feeds
+Common feed channels include:
+- `#trending-projects`
+- `#security-alerts`
+- `#weekly-recaps`
+- `#new-repositories`
+- `#good-first-issues`
+- `#releases`
+
+## Discord UI
+
+GitCord now uses **Discord Components V2** for its major message surfaces.
+
+That means:
+- container-based cards
+- text display blocks
+- separators and sections
+- thumbnails and media galleries
+- clickable button rows
+
+Legacy embeds are kept only where compatibility is still useful.
+
+## Development commands
+
+```bash
+npm run dev
+npm run build
+npm run lint
+npm run format
+npx prisma db push
+```
+
+## Troubleshooting
+
+| Problem | Fix |
+| --- | --- |
+| Bot does not start | Check `DISCORD_TOKEN` and `DATABASE_URL` |
+| Webhooks fail | Verify `GITHUB_WEBHOOK_SECRET` and repo webhook config |
+| No releases/alerts | Ensure the repo is registered and the target Discord channels exist |
+| AI features fail | Confirm `GEMINI_API_KEY` or `OPENAI_API_KEY` is set |
+| Empty issue search | Make sure the server has registered repositories |
+
+## License
+
 ISC
