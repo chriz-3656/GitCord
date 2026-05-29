@@ -1,7 +1,7 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder } from 'discord.js';
 import { ContributorService } from '../database/contributor-service.js';
 import { AchievementService } from '../database/achievement-service.js';
-import { UI_THEMES } from '../discord/ui/themes.js';
+import { CardFactory } from '../discord/ui/cards.js';
 export const ProfileCommand = {
     data: new SlashCommandBuilder()
         .setName('profile')
@@ -19,70 +19,24 @@ export const ProfileCommand = {
                     ephemeral: true,
                 });
             }
-            // Create main profile embed
-            const embed = new EmbedBuilder()
-                .setTitle(`👤 ${profile.username}`)
-                .setColor(UI_THEMES.COLORS.PRIMARY)
-                .setThumbnail(profile.avatarUrl || targetUser.displayAvatarURL());
-            // Reputation section
-            embed.addFields({
-                name: '🏆 Reputation Score',
-                value: `**${profile.reputation}** points`,
-                inline: true,
-            });
-            // Contribution stats
-            embed.addFields({
-                name: '📊 Contributions',
-                value: `📝 **${profile.commits}** commits\n` +
-                    `🔀 **${profile.prs}** PRs (${profile.mergedPrs} merged)\n` +
-                    `❗ **${profile.issues}** issues\n` +
-                    `⭐ **${profile.stars}** stars`,
-                inline: true,
-            });
-            // Helpful contributions
-            embed.addFields({
-                name: '🤝 Community',
-                value: `💬 **${profile.helpfulReviews}** helpful reviews\n` +
-                    `🎯 Reputation Breakdown:` +
-                    `\`\`\`\n` +
-                    `Commits: ${profile.commits * 1}\n` +
-                    `Merged PRs: ${profile.mergedPrs * 5}\n` +
-                    `Issues: ${profile.issues * 3}\n` +
-                    `Reviews: ${profile.helpfulReviews * 2}\n` +
-                    `\`\`\``,
-                inline: false,
-            });
             // Achievements/Badges
             const badges = await AchievementService.getContributorBadges(profile.id);
-            if (badges.length > 0) {
-                const badgeText = badges
-                    .map((b) => `${AchievementService.getRarityEmoji(b.rarity)} **${b.name}** - ${b.description}`)
-                    .join('\n');
-                embed.addFields({
-                    name: `🏅 Achievements (${badges.length})`,
-                    value: badgeText,
-                    inline: false,
-                });
-            }
-            else {
-                embed.addFields({
-                    name: '🏅 Achievements',
-                    value: 'No achievements yet. Keep contributing!',
-                    inline: false,
-                });
-            }
-            // Activity indicator
             const tier = this.getReputationTier(profile.reputation);
-            embed.addFields({
-                name: '⚡ Tier',
-                value: tier,
-                inline: true,
-            });
-            embed.setFooter({
-                text: 'Keep contributing to earn more reputation and badges!',
-            });
-            embed.setTimestamp();
-            await interaction.reply({ embeds: [embed] });
+            await interaction.reply(CardFactory.createProfileCard({
+                username: profile.username,
+                avatarUrl: profile.avatarUrl || targetUser.displayAvatarURL(),
+                reputation: profile.reputation,
+                tier,
+                commits: profile.commits,
+                prs: profile.prs,
+                mergedPrs: profile.mergedPrs,
+                issues: profile.issues,
+                stars: profile.stars,
+                helpfulReviews: profile.helpfulReviews,
+                badges: badges.length > 0
+                    ? badges.map((b) => `${AchievementService.getRarityEmoji(b.rarity)} **${b.name}** - ${b.description}`)
+                    : ['No achievements yet. Keep contributing!'],
+            }));
         }
         catch (error) {
             console.error(error);

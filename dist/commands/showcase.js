@@ -1,8 +1,6 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { LayoutService } from '../discord/ui/layouts.js';
-import { ButtonFactory } from '../discord/ui/components.js';
 import { RepositoryService } from '../database/repository-service.js';
-import { ThemeManager, UI_THEMES } from '../discord/ui/themes.js';
+import { CardFactory } from '../discord/ui/cards.js';
 export const ShowcaseCommand = {
     data: new SlashCommandBuilder()
         .setName('showcase')
@@ -45,26 +43,19 @@ export const ShowcaseCommand = {
                 bannerUrl: bannerUrl || undefined,
             });
             const repoWithStats = await RepositoryService.getRepositoryWithStats(repo.id);
-            const embed = LayoutService.createBaseEmbed(`🚀 Project Showcase: ${updatedRepo.name}`, ThemeManager.getStatusColor(status));
-            LayoutService.addHeader(embed, updatedRepo.fullName, UI_THEMES.EMOJIS.REPO);
-            if (updatedRepo.bannerUrl) {
-                embed.setImage(updatedRepo.bannerUrl);
-            }
-            embed.setDescription(updatedRepo.description || 'No description provided.');
-            LayoutService.addMetaGrid(embed, [
-                { label: '🛠 Tech Stack', value: updatedRepo.techStack || 'Not specified' },
-                { label: '📊 Status', value: status },
-                { label: '❤️ Likes', value: repoWithStats?._count.interactions || 0 },
-                { label: '🔔 Followers', value: repoWithStats?._count.followers || 0 },
-            ]);
-            const socialRow = ButtonFactory.createSocialRow(repo.id);
-            const linkRow = ButtonFactory.createLinkRow({
-                github: `https://github.com/${updatedRepo.fullName}`,
-            });
-            await interaction.reply({
-                embeds: [embed],
-                components: [socialRow, linkRow],
-            });
+            await interaction.reply(CardFactory.createShowcaseCard({
+                repoId: repo.id,
+                fullName: updatedRepo.fullName,
+                name: updatedRepo.name,
+                description: updatedRepo.description,
+                bannerUrl: updatedRepo.bannerUrl,
+                techStack: updatedRepo.techStack,
+                status,
+                category: updatedRepo.category,
+                likes: repoWithStats?._count.interactions || 0,
+                followers: repoWithStats?._count.followers || 0,
+                comments: repoWithStats?._count.comments || 0,
+            }));
         }
         catch (error) {
             console.error(error);

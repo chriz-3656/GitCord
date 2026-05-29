@@ -11,7 +11,6 @@ import {
   IssuesEventSchema,
   StarEventSchema,
 } from './webhooks/schemas.js';
-import { EmbedService } from './discord/embed-service.js';
 import { CommandHandler } from './bot/command-handler.js';
 import { RepositoryService } from './database/repository-service.js';
 import { ContributorService } from './database/contributor-service.js';
@@ -20,6 +19,7 @@ import { SecurityAlertService } from './services/security-alert-service.js';
 import { AIService } from './services/ai-service.js';
 import { ReleaseService } from './services/release-service.js';
 import { prisma } from './database/prisma.js';
+import { CardFactory, type ComponentsV2Reply } from './discord/ui/cards.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -102,8 +102,10 @@ app.post('/webhooks/github', async (req: any, res) => {
   logger.info(`Received GitHub event: ${event} for ${repoFullName}`);
 
   try {
-    let embed;
+    let outgoingMessage: ComponentsV2Reply | null = null;
     const channel = (await client.channels.fetch(repoConfig.channelId)) as TextChannel;
+    let outgoingChannel: TextChannel = channel;
+    let releaseHandled = false;
 
     // Enhanced Security Scanning
     const rawPayloadString = JSON.stringify(req.body);
@@ -140,13 +142,6 @@ app.post('/webhooks/github', async (req: any, res) => {
 
     // Send security alerts if issues found
     if (allIssues.length > 0) {
-      const alertData = await SecurityAlertService.formatSecurityAlert(
-        repoFullName,
-        allIssues,
-        req.body.sender?.login || req.body.pusher?.name || 'Unknown',
-        event === 'push' ? req.body.commits?.[0]?.id : undefined,
-      );
-
       // Send security alerts to the main channel or security-alerts channel if available
       let securityChannel = channel;
       try {
@@ -162,7 +157,14 @@ app.post('/webhooks/github', async (req: any, res) => {
         // If we can't find security-alerts channel, use the main channel
       }
 
-      await securityChannel.send({ embeds: alertData.embeds });
+      await securityChannel.send(
+        SecurityAlertService.createSecurityAlertCard(
+          repoFullName,
+          allIssues,
+          req.body.sender?.login || req.body.pusher?.name || 'Unknown',
+          event === 'push' ? req.body.commits?.[0]?.id : undefined,
+        ),
+      );
       logger.warn(
         `Security alert triggered for ${repoFullName}: ${allIssues.length} issue(s) found`,
       );
@@ -171,7 +173,17 @@ app.post('/webhooks/github', async (req: any, res) => {
     switch (event) {
       case 'push': {
         const data = PushEventSchema.parse(req.body);
-        embed = EmbedService.createPushEmbed(data);
+        outgoingMessage = CardFactory.createPushCard({
+          repoName: data.repository.full_name,
+          branch: data.ref.split('/').pop() || data.ref,
+          compareUrl: data.compare,
+          commits: data.commits.map((commit) => ({
+            id: commit.id,
+            url: commit.url,
+            message: commit.message,
+          })),
+          pusher: data.pusher.name,
+        });
         // Track stats
         await ContributorService.updateStats({
           username: data.pusher.name,
@@ -185,7 +197,16 @@ app.post('/webhooks/github', async (req: any, res) => {
           data.pull_request.title,
           data.pull_request.body || '',
         );
-        embed = EmbedService.createPREmbed(data, aiSummary);
+        outgoingMessage = CardFactory.createPRCard({
+          action: data.action,
+          number: data.number,
+          title: data.pull_request.title,
+          url: data.pull_request.html_url,
+          author: data.pull_request.user.login,
+          avatarUrl: data.pull_request.user.avatar_url,
+          body: data.pull_request.body,
+          aiSummary,
+        });
         // Track stats
         await ContributorService.updateStats({
           username: data.pull_request.user.login,
@@ -197,7 +218,16 @@ app.post('/webhooks/github', async (req: any, res) => {
       case 'issues': {
         const data = IssuesEventSchema.parse(req.body);
         const aiAnalysis = await AIService.analyzeIssue(data.issue.title, data.issue.body || '');
-        embed = EmbedService.createIssueEmbed(data, aiAnalysis);
+        outgoingMessage = CardFactory.createIssueEventCard({
+          action: data.action,
+          title: data.issue.title,
+          url: data.issue.html_url,
+          author: data.issue.user.login,
+          avatarUrl: data.issue.user.avatar_url,
+          labels: data.issue.labels.map((label) => label.name),
+          body: data.issue.body,
+          aiAnalysis,
+        });
         // Track stats
         await ContributorService.updateStats({
           username: data.issue.user.login,
@@ -208,7 +238,12 @@ app.post('/webhooks/github', async (req: any, res) => {
       }
       case 'star': {
         const data = StarEventSchema.parse(req.body);
-        embed = EmbedService.createStarEmbed(data);
+        outgoingMessage = CardFactory.createStarCard({
+          repoName: data.repository.full_name,
+          url: data.repository.html_url,
+          starrer: data.sender.login,
+          avatarUrl: data.sender.avatar_url,
+        });
         // Track stats
         await ContributorService.updateStats({
           username: data.sender.login,
@@ -225,7 +260,7 @@ app.post('/webhooks/github', async (req: any, res) => {
           await ReleaseService.trackRelease(releaseData);
           
           // Generate announcement embed
-          embed = ReleaseService.generateReleaseAnnouncement(releaseData);
+          outgoingMessage = ReleaseService.generateReleaseAnnouncementCard(releaseData);
           
           // Try to find and post to releases channel
           try {
@@ -244,7 +279,10 @@ app.post('/webhooks/github', async (req: any, res) => {
             );
             
             if (releaseChannel) {
-              const releaseMsg = await (releaseChannel as any).send({ embeds: [embed] });
+              outgoingChannel = releaseChannel as TextChannel;
+              const releaseMsg = await outgoingChannel.send(outgoingMessage);
+              releaseHandled = true;
+              outgoingMessage = null;
               
               // Pin stable releases
               if (ReleaseService['shouldPinRelease'](releaseType)) {
@@ -272,12 +310,12 @@ app.post('/webhooks/github', async (req: any, res) => {
               logger.info(`Posted release announcement to ${targetChannelName}`);
             } else {
               // Post to main channel if target channel not found
-              await channel.send({ embeds: [embed] });
+              outgoingChannel = channel;
               logger.info(`Release channel ${targetChannelName} not found, posted to main channel`);
             }
           } catch (channelError) {
             // Fallback to main channel
-            await channel.send({ embeds: [embed] });
+            outgoingChannel = channel;
             logger.info(`Error finding release channel, posted to main channel`);
           }
         }
@@ -287,9 +325,9 @@ app.post('/webhooks/github', async (req: any, res) => {
         logger.info(`Unhandled event type: ${event}`);
     }
 
-    if (embed && channel) {
-      await channel.send({ embeds: [embed] });
-      logger.info(`Relayed ${event} event to Discord channel ${repoConfig.channelId}`);
+    if (outgoingMessage && outgoingChannel && !releaseHandled) {
+      await outgoingChannel.send(outgoingMessage);
+      logger.info(`Relayed ${event} event to Discord channel ${outgoingChannel.id}`);
     }
 
     res.status(200).send('Webhook processed');

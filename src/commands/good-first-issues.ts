@@ -1,6 +1,7 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction } from 'discord.js';
 import { IssueService } from '../services/issue-service.js';
 import { RepositoryService } from '../database/repository-service.js';
+import { CardFactory } from '../discord/ui/cards.js';
 
 export const GoodFirstIssuesCommand = {
   data: new SlashCommandBuilder()
@@ -54,13 +55,6 @@ export const GoodFirstIssuesCommand = {
       // Sort by difficulty
       issues.sort((a, b) => (a.difficulty === 'beginner' ? -1 : 1));
 
-      const embed = new EmbedBuilder()
-        .setTitle('🌱 Beginner-Friendly Issues')
-        .setColor(0x43b581)
-        .setDescription(
-          language ? `Showing open issues in **${language}**` : 'From your registered repositories',
-        );
-
       // Group by difficulty
       const byDifficulty = {
         beginner: [] as any[],
@@ -71,43 +65,47 @@ export const GoodFirstIssuesCommand = {
         byDifficulty[issue.difficulty].push(issue);
       }
 
-      // Add fields for each difficulty
-      if (byDifficulty.beginner.length > 0) {
-        embed.addFields({
-          name: '🟢 Beginner (Perfect to start)',
-          value: byDifficulty.beginner
-            .slice(0, 5)
-            .map(
-              (i) =>
-                `• [${i.title}](${i.url}) \`${i.repo}\`${i.requiredSkills.length > 0 ? ` - **${i.requiredSkills.slice(0, 2).join(', ')}**` : ''}`,
-            )
-            .join('\n'),
-          inline: false,
-        });
-      }
+      const beginnerItems =
+        byDifficulty.beginner.length > 0
+          ? [
+              '🟢 **Beginner**',
+              ...byDifficulty.beginner.slice(0, 5).map(
+                (i) =>
+                  `• [${i.title}](${i.url}) \`${i.repo}\`${i.requiredSkills.length > 0 ? ` — **${i.requiredSkills.slice(0, 2).join(', ')}**` : ''}`,
+              ),
+            ]
+          : [];
 
-      if (byDifficulty.intermediate.length > 0) {
-        embed.addFields({
-          name: '🟡 Intermediate (Some experience)',
-          value: byDifficulty.intermediate
-            .slice(0, 3)
-            .map((i) => `• [${i.title}](${i.url}) \`${i.repo}\``)
-            .join('\n'),
-          inline: false,
-        });
-      }
+      const intermediateItems =
+        byDifficulty.intermediate.length > 0
+          ? [
+              '🟡 **Intermediate**',
+              ...byDifficulty.intermediate.slice(0, 3).map((i) => `• [${i.title}](${i.url}) \`${i.repo}\``),
+            ]
+          : [];
 
-      embed.addFields({
-        name: '💡 How to Contribute',
-        value:
-          '1. Pick an issue\n2. Check the repo README\n3. Leave a comment expressing interest\n4. Submit your PR!',
-        inline: false,
-      });
+      const advancedItems =
+        byDifficulty.advanced.length > 0
+          ? [
+              '🔴 **Advanced**',
+              ...byDifficulty.advanced.slice(0, 3).map((i) => `• [${i.title}](${i.url}) \`${i.repo}\``),
+            ]
+          : [];
 
-      embed.setFooter({ text: `Found ${issues.length} issues • Good luck contributing! 🚀` });
-      embed.setTimestamp();
-
-      await interaction.editReply({ embeds: [embed] });
+      await interaction.editReply(
+        CardFactory.createIssueCard({
+          title: 'Beginner-Friendly Issues',
+          subtitle: language
+            ? `Showing open issues in **${language}**`
+            : 'From your registered repositories',
+          items: [
+            ...beginnerItems,
+            ...intermediateItems,
+            ...advancedItems,
+            '💡 **How to Contribute**\n1. Pick an issue\n2. Check the repo README\n3. Leave a comment expressing interest\n4. Submit your PR!',
+          ],
+        }),
+      );
     } catch (error) {
       console.error(error);
       await interaction.editReply('❌ Failed to fetch issues. Check GitHub API access.');

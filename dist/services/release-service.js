@@ -1,6 +1,7 @@
 import { Octokit } from 'octokit';
 import { EmbedBuilder } from 'discord.js';
 import { prisma } from '../database/prisma.js';
+import { CardFactory } from '../discord/ui/cards.js';
 import pino from 'pino';
 const logger = pino({
     transport: {
@@ -216,6 +217,26 @@ export class ReleaseService {
             text: `GitCord Release Tracker • ${releaseData.repoId}`,
         });
         return embed;
+    }
+    /**
+     * Generate Discord Components V2 announcement card for a release
+     */
+    static generateReleaseAnnouncementCard(releaseData) {
+        const releaseType = this.determineReleaseType(releaseData.version, releaseData.isPrerelease);
+        return CardFactory.createReleaseCard({
+            title: releaseData.title,
+            version: releaseData.version,
+            tagName: releaseData.tagName,
+            type: releaseType,
+            author: releaseData.author,
+            authorAvatar: releaseData.authorAvatar,
+            authorUrl: releaseData.authorUrl,
+            releasedAt: releaseData.releasedAt,
+            body: this.formatDescription(releaseData.body || releaseData.description),
+            assets: releaseData.assets,
+            releaseUrl: releaseData.releaseUrl,
+            isDraft: releaseData.isDraft,
+        });
     }
     /**
      * Parse GitHub release webhook data

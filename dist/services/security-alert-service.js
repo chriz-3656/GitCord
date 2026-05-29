@@ -1,5 +1,6 @@
 import { EmbedBuilder } from 'discord.js';
 import { SecurityService, SecuritySeverity } from '../security/security-service.js';
+import { CardFactory } from '../discord/ui/cards.js';
 export class SecurityAlertService {
     static REMEDIATION_LINKS = {
         'Exposed .env file': 'https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files',
@@ -102,6 +103,14 @@ export class SecurityAlertService {
         });
         embed.setTimestamp().setFooter({ text: 'GitCord Security Monitor' });
         return embed;
+    }
+    static createSecurityAlertCard(repoFullName, issues, pusher, commitHash) {
+        return CardFactory.createSecurityCard({
+            repoFullName,
+            issues,
+            pusher,
+            commitHash,
+        });
     }
     static async formatSecurityAlert(repoFullName, issues, pusher, commitHash) {
         const mainEmbed = this.createSecurityAlertEmbed(repoFullName, issues, pusher, commitHash);

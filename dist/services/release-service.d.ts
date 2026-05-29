@@ -1,4 +1,5 @@
 import { EmbedBuilder } from 'discord.js';
+import { type ComponentsV2Reply } from '../discord/ui/cards.js';
 interface ReleaseAsset {
     name: string;
     url: string;
@@ -61,6 +62,10 @@ export declare class ReleaseService {
      * Generate Discord announcement embed for a release
      */
     static generateReleaseAnnouncement(releaseData: ReleaseData): EmbedBuilder;
+    /**
+     * Generate Discord Components V2 announcement card for a release
+     */
+    static generateReleaseAnnouncementCard(releaseData: ReleaseData): ComponentsV2Reply;
     /**
      * Parse GitHub release webhook data
      */

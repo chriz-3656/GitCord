@@ -1,5 +1,6 @@
-import { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, } from 'discord.js';
+import { SlashCommandBuilder, ContainerBuilder, SeparatorBuilder, SeparatorSpacingSize, TextDisplayBuilder, PermissionFlagsBits, } from 'discord.js';
 import { RepositoryService } from '../database/repository-service.js';
+import { CardFactory } from '../discord/ui/cards.js';
 export const ListReposCommand = {
     data: new SlashCommandBuilder()
         .setName('list-repos')
@@ -15,12 +16,15 @@ export const ListReposCommand = {
                     ephemeral: true,
                 });
             }
-            const embed = new EmbedBuilder()
-                .setTitle('📦 Registered Repositories')
-                .setColor(0x5865f2)
-                .setDescription(repos.map((r) => `• **${r.fullName}** -> <#${r.channelId}>`).join('\n'))
-                .setTimestamp();
-            await interaction.reply({ embeds: [embed], ephemeral: true });
+            await interaction.reply({
+                ...CardFactory.createReply([
+                    new ContainerBuilder()
+                        .setAccentColor(0x5865f2)
+                        .addTextDisplayComponents(new TextDisplayBuilder().setContent('📦 **Registered Repositories**'), new TextDisplayBuilder().setContent(repos.map((r) => `• **${r.fullName}** -> <#${r.channelId}>`).join('\n')))
+                        .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)),
+                ]),
+                ephemeral: true,
+            });
         }
         catch (error) {
             console.error(error);

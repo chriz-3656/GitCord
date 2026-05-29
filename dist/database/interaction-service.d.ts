@@ -70,9 +70,9 @@ export declare class InteractionService {
         } & {
             type: string;
             id: string;
-            contributorId: string;
-            repositoryId: string;
             createdAt: Date;
+            repositoryId: string;
+            contributorId: string;
         })[];
         followers: ({
             contributor: {
@@ -81,9 +81,9 @@ export declare class InteractionService {
             };
         } & {
             id: string;
-            contributorId: string;
-            repositoryId: string;
             createdAt: Date;
+            repositoryId: string;
+            contributorId: string;
         })[];
     }>;
     /**

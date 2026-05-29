@@ -1,5 +1,6 @@
 import { EmbedBuilder } from 'discord.js';
 import { SecurityIssue, SecurityService, SecuritySeverity } from '../security/security-service.js';
+import { CardFactory, type ComponentsV2Reply } from '../discord/ui/cards.js';
 
 export class SecurityAlertService {
   private static readonly REMEDIATION_LINKS = {
@@ -135,6 +136,20 @@ export class SecurityAlertService {
     embed.setTimestamp().setFooter({ text: 'GitCord Security Monitor' });
 
     return embed;
+  }
+
+  static createSecurityAlertCard(
+    repoFullName: string,
+    issues: SecurityIssue[],
+    pusher: string,
+    commitHash?: string,
+  ): ComponentsV2Reply {
+    return CardFactory.createSecurityCard({
+      repoFullName,
+      issues,
+      pusher,
+      commitHash,
+    });
   }
 
   static async formatSecurityAlert(

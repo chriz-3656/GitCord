@@ -43,9 +43,9 @@ export declare class RepositoryService {
     }>;
     static getRepositoryWithStats(id: string): Promise<({
         _count: {
+            interactions: number;
             followers: number;
             comments: number;
-            interactions: number;
         };
     } & {
         status: string;

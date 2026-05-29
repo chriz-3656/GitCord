@@ -1,5 +1,6 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, ChatInputCommandInteraction } from 'discord.js';
 import { LeaderboardService } from '../database/leaderboard-service.js';
+import { CardFactory } from '../discord/ui/cards.js';
 
 export const LeaderboardCommand = {
   data: new SlashCommandBuilder()
@@ -52,21 +53,17 @@ export const LeaderboardCommand = {
             return interaction.reply('No contributors yet.');
           }
 
-          const embed = new EmbedBuilder()
-            .setTitle('🏆 Top Contributors')
-            .setColor(0xfee75c)
-            .setDescription(
-              leaders
-                .map(
-                  (c) =>
-                    `${c.position}. **${c.name}** — ${c.value} reputation\n` +
-                    `   ↳ ${c.metadata?.commits || 0} commits, ${c.metadata?.prs || 0} PRs`,
-                )
-                .join('\n'),
-            )
-            .setTimestamp();
-
-          await interaction.reply({ embeds: [embed] });
+          await interaction.reply(
+            CardFactory.createLeaderboardCard({
+              title: 'Top Contributors',
+              subtitle: 'Ranked by reputation and contribution impact',
+              accentColor: 0xfee75c,
+              items: leaders.map(
+                (c) =>
+                  `${c.position}. **${c.name}** — ${c.value} reputation\n↳ ${c.metadata?.commits || 0} commits, ${c.metadata?.prs || 0} PRs`,
+              ),
+            }),
+          );
           break;
         }
 
@@ -77,17 +74,14 @@ export const LeaderboardCommand = {
             return interaction.reply('No trending repos yet.');
           }
 
-          const embed = new EmbedBuilder()
-            .setTitle('🔥 Trending Repositories (7 days)')
-            .setColor(0xff6b6b)
-            .setDescription(
-              trending
-                .map((r) => `${r.position}. **${r.fullName}** — ${r.value} events`)
-                .join('\n'),
-            )
-            .setTimestamp();
-
-          await interaction.reply({ embeds: [embed] });
+          await interaction.reply(
+            CardFactory.createLeaderboardCard({
+              title: 'Trending Repositories (7 days)',
+              subtitle: 'Fastest growing repositories by recent activity',
+              accentColor: 0xff6b6b,
+              items: trending.map((r) => `${r.position}. **${r.fullName}** — ${r.value} events`),
+            }),
+          );
           break;
         }
 
@@ -98,15 +92,14 @@ export const LeaderboardCommand = {
             return interaction.reply('No starred repos yet.');
           }
 
-          const embed = new EmbedBuilder()
-            .setTitle('⭐ Most Starred Projects')
-            .setColor(0xffd700)
-            .setDescription(
-              starred.map((r) => `${r.position}. **${r.fullName}** — ${r.value} ⭐`).join('\n'),
-            )
-            .setTimestamp();
-
-          await interaction.reply({ embeds: [embed] });
+          await interaction.reply(
+            CardFactory.createLeaderboardCard({
+              title: 'Most Starred Projects',
+              subtitle: 'Projects with the strongest community support',
+              accentColor: 0xffd700,
+              items: starred.map((r) => `${r.position}. **${r.fullName}** — ${r.value} ⭐`),
+            }),
+          );
           break;
         }
 
@@ -117,15 +110,14 @@ export const LeaderboardCommand = {
             return interaction.reply('No active repos yet.');
           }
 
-          const embed = new EmbedBuilder()
-            .setTitle('⚡ Most Active Projects')
-            .setColor(0x00ff00)
-            .setDescription(
-              active.map((r) => `${r.position}. **${r.fullName}** — ${r.value} events`).join('\n'),
-            )
-            .setTimestamp();
-
-          await interaction.reply({ embeds: [embed] });
+          await interaction.reply(
+            CardFactory.createLeaderboardCard({
+              title: 'Most Active Projects',
+              subtitle: 'Repositories with the highest event volume',
+              accentColor: 0x00ff00,
+              items: active.map((r) => `${r.position}. **${r.fullName}** — ${r.value} events`),
+            }),
+          );
           break;
         }
 
@@ -136,19 +128,14 @@ export const LeaderboardCommand = {
             return interaction.reply('No repo selected for this week yet.');
           }
 
-          const embed = new EmbedBuilder()
-            .setTitle('🌟 Repo of the Week')
-            .setColor(0x9c27b0)
-            .setDescription(
-              `**${rotw.fullName}**\n\n${rotw.description || 'No description available.'}\n\nEngagement Score: ${rotw.value.toFixed(1)}`,
-            )
-            .setTimestamp();
-
-          if (rotw.bannerUrl) {
-            embed.setImage(rotw.bannerUrl);
-          }
-
-          await interaction.reply({ embeds: [embed] });
+          await interaction.reply(
+            CardFactory.createLeaderboardCard({
+              title: 'Repo of the Week',
+              subtitle: `${rotw.fullName}\n${rotw.description || 'No description available.'}`,
+              accentColor: 0x9c27b0,
+              items: [`Engagement Score: ${rotw.value.toFixed(1)}`],
+            }),
+          );
           break;
         }
 
@@ -159,20 +146,17 @@ export const LeaderboardCommand = {
             return interaction.reply('No helpful contributors yet.');
           }
 
-          const embed = new EmbedBuilder()
-            .setTitle('🤝 Most Helpful Contributors')
-            .setColor(0x00aaff)
-            .setDescription(
-              helpful
-                .map(
-                  (c) =>
-                    `${c.position}. **${c.name}** — ${c.metadata?.helpfulReviews || 0} reviews, ${c.metadata?.issuesResolved || 0} issues`,
-                )
-                .join('\n'),
-            )
-            .setTimestamp();
-
-          await interaction.reply({ embeds: [embed] });
+          await interaction.reply(
+            CardFactory.createLeaderboardCard({
+              title: 'Most Helpful Contributors',
+              subtitle: 'Recognizing reviews, mentoring, and issue resolution',
+              accentColor: 0x00aaff,
+              items: helpful.map(
+                (c) =>
+                  `${c.position}. **${c.name}** — ${c.metadata?.helpfulReviews || 0} reviews, ${c.metadata?.issuesResolved || 0} issues`,
+              ),
+            }),
+          );
           break;
         }
 
@@ -183,17 +167,14 @@ export const LeaderboardCommand = {
             return interaction.reply('Hall of fame is empty.');
           }
 
-          const embed = new EmbedBuilder()
-            .setTitle('🏅 Hall of Fame')
-            .setColor(0xff6b9d)
-            .setDescription(
-              fame
-                .map((c) => `${c.position}. **${c.name}** — ${c.value} reputation points`)
-                .join('\n'),
-            )
-            .setTimestamp();
-
-          await interaction.reply({ embeds: [embed] });
+          await interaction.reply(
+            CardFactory.createLeaderboardCard({
+              title: 'Hall of Fame',
+              subtitle: 'All-time community leaders',
+              accentColor: 0xff6b9d,
+              items: fame.map((c) => `${c.position}. **${c.name}** — ${c.value} reputation points`),
+            }),
+          );
           break;
         }
 
@@ -214,13 +195,14 @@ export const LeaderboardCommand = {
             mobiledev: '📱 Mobile Development',
           };
 
-          const embed = new EmbedBuilder()
-            .setTitle(`${categoryNames[category] || category.toUpperCase()} Projects`)
-            .setColor(0xaa00ff)
-            .setDescription(catLeaders.map((r) => `${r.position}. **${r.fullName}**`).join('\n'))
-            .setTimestamp();
-
-          await interaction.reply({ embeds: [embed] });
+          await interaction.reply(
+            CardFactory.createLeaderboardCard({
+              title: `${categoryNames[category] || category.toUpperCase()} Projects`,
+              subtitle: 'Category rankings',
+              accentColor: 0xaa00ff,
+              items: catLeaders.map((r) => `${r.position}. **${r.fullName}**`),
+            }),
+          );
           break;
         }
       }
