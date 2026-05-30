@@ -1,4 +1,15 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction } from 'discord.js';
+import {
+  SlashCommandBuilder,
+  ChatInputCommandInteraction,
+  ContainerBuilder,
+  TextDisplayBuilder,
+  SectionBuilder,
+  SeparatorBuilder,
+  SeparatorSpacingSize,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} from 'discord.js';
 import { RepositoryService } from '../database/repository-service.js';
 import { CardFactory } from '../discord/ui/cards.js';
 
@@ -59,10 +70,33 @@ export const ShowcaseCommand = {
       const repo = await RepositoryService.getRepositoryByFullName(fullName);
 
       if (!repo) {
-        return interaction.reply({
-          content: `❌ Repository **${fullName}** is not registered. Run \`/register-repo\` first.`,
-          ephemeral: true,
-        });
+        // Repository is not registered. Allow users to publish a public showcase preview
+        // since registration is admin-only. This preview is non-interactive for persistence reasons.
+        const previewComponents = [
+          new ContainerBuilder()
+            .setAccentColor(0xE5A00A)
+            .addTextDisplayComponents(
+              new TextDisplayBuilder().setContent(`**${fullName}**`),
+              new TextDisplayBuilder().setContent(description || 'No description provided.'),
+              new TextDisplayBuilder().setContent(
+                `**Status:** ${status} • **Note:** Repository is not registered. Registration is admin-only. Use /register-repo for admins or contact your server admins to register this repository.`,
+              ),
+            )
+            .addSeparatorComponents(new SeparatorBuilder().setDivider(true).setSpacing(SeparatorSpacingSize.Small)),
+          new ActionRowBuilder<ButtonBuilder>().addComponents(
+            new ButtonBuilder()
+              .setLabel('View on GitHub')
+              .setURL(`https://github.com/${fullName}`)
+              .setStyle(ButtonStyle.Link),
+            new ButtonBuilder()
+              .setCustomId(`request_register:${fullName}`)
+              .setLabel('Request Registration')
+              .setStyle(ButtonStyle.Primary),
+          ),
+        ];
+
+        await interaction.reply(CardFactory.createReply(previewComponents));
+        return;
       }
 
       // Update metadata
