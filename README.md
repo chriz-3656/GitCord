@@ -50,15 +50,18 @@ GitCord is a Discord bot for GitHub communities. It relays webhooks, showcases p
 
 ## How to use the bot
 
-### 1. Register a repository
-Use `/register-repo` to connect a GitHub repository to a Discord channel.
+### 1. Register a repository (admin only)
+Use `/register-repo` to connect a GitHub repository to a Discord channel. Registration is intentionally restricted to server administrators to prevent unauthorized webhooks.
 
 - Enter the repository as `owner/repo`
 - Select the channel that should receive webhook updates
 - GitCord stores the webhook secret and uses it to validate GitHub requests
+- Admins run `/register-repo` to enable full interactive showcases (likes, follows, comments, release pinning, and security alerts)
 
-### 2. Send project updates
-Use `/showcase` to publish or update a project card.
+### 2. Publish or preview a showcase (all users)
+Use `/showcase` to publish or update a project card. If the repository is already registered, the showcase will be fully interactive with like/follow/interest buttons and updates persisted to the server.
+
+If the repository is NOT registered, `/showcase` will publish a public preview card (non-interactive) that links to the GitHub repo and includes a **Request Registration** button. This allows community members to preview projects and request admins to register the repository for full features.
 
 Recommended fields:
 - `repo-full-name` — required `owner/repo`
@@ -68,11 +71,10 @@ Recommended fields:
 - `banner-url` — optional project banner image
 - `request-role` — optional contributor role request
 
-The showcase card includes:
-- repository title and description
-- GitHub link buttons
-- like/follow/interested actions
-- project metadata and banner imagery when available
+Showcase behavior:
+- Registered repo: interactive card (likes, follows, interested, comments) and stats stored in DB
+- Unregistered repo: public preview with GitHub links and 'Request Registration' button to notify admins
+- To enable interactive features, an admin must register the repository with `/register-repo`
 
 ### 3. Discover contributors and projects
 - `/leaderboard` shows ranked views like top contributors, trending repositories, most starred projects, repo of the week, and category rankings
@@ -104,7 +106,7 @@ These feed the engagement system and power repository stats, leaderboards, and n
 | `/register-repo` | Register a repository and webhook channel |
 | `/list-repos` | Show repositories registered in the server |
 | `/remove-repo` | Remove a repository registration |
-| `/showcase` | Publish/update a project showcase card |
+| `/showcase` | Publish/update a project showcase card (preview available for unregistered repos) |
 | `/profile` | View contributor profile, tier, badges, and stats |
 | `/leaderboard` | View contributor/repository rankings |
 | `/good-first-issues` | Find beginner-friendly issues |
