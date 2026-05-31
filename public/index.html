@@ -1,52 +1,259 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitCord Dashboard</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body class="bg-zinc-950 text-zinc-100 font-sans">
-    <nav class="border-b border-zinc-800 p-4">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-2xl font-bold text-indigo-500">GitCord</h1>
-            <div id="status" class="text-sm text-zinc-400">Loading system status...</div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="GitCord is a Discord-native developer collaboration platform for GitHub communities, showcases, leaderboards, and DevSecOps alerts."
+    />
+    <title>GitCord — Discord-native developer collaboration</title>
+    <link rel="stylesheet" href="/style.css" />
+  </head>
+  <body>
+    <div class="bg-orb bg-orb-a"></div>
+    <div class="bg-orb bg-orb-b"></div>
+
+    <header class="header">
+      <a class="brand" href="#top">
+        <span class="brand-mark">G</span>
+        <span>
+          <strong>GitCord</strong>
+          <small>Discord-native developer collaboration</small>
+        </span>
+      </a>
+
+      <nav class="nav">
+        <a href="#features">Features</a>
+        <a href="#workflow">Workflow</a>
+        <a href="#commands">Commands</a>
+        <a href="#live">Live data</a>
+        <a href="#security">Security</a>
+        <button id="theme-toggle" class="ghost-button" type="button">Toggle theme</button>
+      </nav>
+    </header>
+
+    <main id="top" class="page">
+      <section class="hero reveal">
+        <div class="hero-copy">
+          <p class="eyebrow">Lightweight • Fast • Discord-first</p>
+          <h1>Turn GitHub repos into a living community inside Discord.</h1>
+          <p class="lead">
+            GitCord connects webhooks, showcase cards, contributor reputation, smart
+            notifications, live feeds, and security alerts into one clean developer collaboration
+            layer.
+          </p>
+
+          <div class="cta-row">
+            <a class="primary-button" href="#workflow">See how it works</a>
+            <a class="secondary-button" href="#commands">Browse commands</a>
+          </div>
+
+          <ul class="hero-points">
+            <li>Components V2 project cards</li>
+            <li>Admin-only repo registration</li>
+            <li>Public showcase previews for everyone</li>
+            <li>Security, release, leaderboard, and feed automation</li>
+          </ul>
         </div>
-    </nav>
 
-    <main class="container mx-auto p-8">
-        <section id="stats" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-            <!-- Stats cards will be injected here -->
-        </section>
+        <aside class="hero-panel">
+          <div class="panel-card accent">
+            <span class="panel-label">Platform status</span>
+            <strong>Production-ready architecture</strong>
+            <p>Modular TypeScript services, Prisma data model, Discord.js UI, and webhook relay.</p>
+          </div>
+          <div class="panel-grid">
+            <article class="mini-card">
+              <span>Showcase</span>
+              <strong>Rich project cards</strong>
+            </article>
+            <article class="mini-card">
+              <span>Security</span>
+              <strong>Severity-based alerts</strong>
+            </article>
+            <article class="mini-card">
+              <span>Discovery</span>
+              <strong>Leaderboards & feeds</strong>
+            </article>
+            <article class="mini-card">
+              <span>Profiles</span>
+              <strong>Reputation & badges</strong>
+            </article>
+          </div>
+        </aside>
+      </section>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <section id="repositories">
-                <h2 class="text-xl font-semibold mb-4">Registered Repositories</h2>
-                <div class="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
-                    <table class="w-full text-left">
-                        <thead class="bg-zinc-800 text-xs uppercase text-zinc-400">
-                            <tr>
-                                <th class="p-4">Repository</th>
-                                <th class="p-4">Channel</th>
-                            </tr>
-                        </thead>
-                        <tbody id="repo-list">
-                            <!-- Repos will be injected here -->
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+      <section class="stats reveal" aria-label="Live metrics">
+        <article class="stat-card">
+          <span>Registered repos</span>
+          <strong data-live-stat="repos">--</strong>
+        </article>
+        <article class="stat-card">
+          <span>Leaderboard entries</span>
+          <strong data-live-stat="leaders">--</strong>
+        </article>
+        <article class="stat-card">
+          <span>Components V2 cards</span>
+          <strong>7+</strong>
+        </article>
+        <article class="stat-card">
+          <span>Core focus</span>
+          <strong>Community growth</strong>
+        </article>
+      </section>
 
-            <section id="leaderboard">
-                <h2 class="text-xl font-semibold mb-4">Top Contributors</h2>
-                <div class="bg-zinc-900 border border-zinc-800 rounded-lg p-6" id="contributor-list">
-                    <!-- Leaderboard will be injected here -->
-                </div>
-            </section>
+      <section id="features" class="section reveal">
+        <div class="section-heading">
+          <p class="eyebrow">Features</p>
+          <h2>Everything a GitHub community needs, without heavy frontend baggage.</h2>
         </div>
+
+        <div class="feature-grid">
+          <article class="feature-card">
+            <h3>Project showcases</h3>
+            <p>
+              Public previews for everyone, full interactive cards for registered repos, and
+              metadata-rich layouts for banners, stats, and calls to action.
+            </p>
+          </article>
+          <article class="feature-card">
+            <h3>Smart engagement</h3>
+            <p>
+              Likes, follows, bookmarks, interested contributors, comments, and cooldown-based
+              notifications that avoid spam.
+            </p>
+          </article>
+          <article class="feature-card">
+            <h3>Leaderboards & reputation</h3>
+            <p>
+              Weighted rankings for contributors and projects, plus profiles with badges, streaks,
+              and collaboration stats.
+            </p>
+          </article>
+          <article class="feature-card">
+            <h3>Security monitoring</h3>
+            <p>
+              Detect exposed secrets, dangerous file changes, suspicious commits, and other
+              DevSecOps issues with severity-based alerts.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section id="workflow" class="section reveal split">
+        <div>
+          <p class="eyebrow">Workflow</p>
+          <h2>Simple for users, controlled for admins.</h2>
+        </div>
+        <div class="workflow-steps">
+          <article>
+            <span>01</span>
+            <div>
+              <h3>Admins register a repo</h3>
+              <p>
+                Server admins use <code>/register-repo</code> to connect a GitHub repo and enable
+                live webhook routing.
+              </p>
+            </div>
+          </article>
+          <article>
+            <span>02</span>
+            <div>
+              <h3>Anyone can showcase</h3>
+              <p>
+                <code>/showcase</code> publishes a public preview for unregistered repos or a full
+                interactive card for registered ones.
+              </p>
+            </div>
+          </article>
+          <article>
+            <span>03</span>
+            <div>
+              <h3>Community actions flow in</h3>
+              <p>
+                Followers, comments, leaderboard points, release posts, and security alerts all
+                feed back into the community.
+              </p>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section id="commands" class="section reveal">
+        <div class="section-heading">
+          <p class="eyebrow">Commands</p>
+          <h2>Core bot commands at a glance.</h2>
+        </div>
+
+        <div class="command-table">
+          <div><code>/register-repo</code><span>Admin-only repository registration</span></div>
+          <div><code>/showcase</code><span>Publish project cards and previews</span></div>
+          <div><code>/leaderboard</code><span>Rank contributors and projects</span></div>
+          <div><code>/profile</code><span>Show reputation, badges, and history</span></div>
+          <div><code>/good-first-issues</code><span>Discover beginner-friendly work</span></div>
+          <div><code>/notification-settings</code><span>Control ping and silent mode</span></div>
+        </div>
+      </section>
+
+      <section id="live" class="section reveal split">
+        <div>
+          <p class="eyebrow">Live data</p>
+          <h2>Surface real community data without adding frontend weight.</h2>
+          <p class="section-copy">
+            This page reads from the same repository and leaderboard APIs used by the bot, so the
+            homepage stays current while remaining fast and simple.
+          </p>
+        </div>
+
+        <div class="live-panel">
+          <article class="live-card">
+            <h3>Top repositories</h3>
+            <ul id="repo-list" class="live-list">
+              <li class="placeholder">Loading repositories…</li>
+            </ul>
+          </article>
+          <article class="live-card">
+            <h3>Top contributors</h3>
+            <ul id="leaderboard-list" class="live-list">
+              <li class="placeholder">Loading leaderboard…</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section id="security" class="section reveal">
+        <div class="section-heading">
+          <p class="eyebrow">Security & reliability</p>
+          <h2>Built for safe webhook handling and scalable communities.</h2>
+        </div>
+
+        <div class="security-grid">
+          <article class="security-card">
+            <h3>Webhook verification</h3>
+            <p>GitHub payloads are signature-checked before they reach Discord or storage.</p>
+          </article>
+          <article class="security-card">
+            <h3>Anti-spam notifications</h3>
+            <p>Cooldowns keep repeat interactions quiet while still surfacing important events.</p>
+          </article>
+          <article class="security-card">
+            <h3>Scalable services</h3>
+            <p>Modular architecture supports caching, queues, feeds, and future infrastructure upgrades.</p>
+          </article>
+        </div>
+      </section>
     </main>
 
-    <script src="app.js"></script>
-</body>
+    <footer class="footer">
+      <p>GitCord — Discord-native developer collaboration, discovery, and DevSecOps.</p>
+      <div class="footer-links">
+        <a href="#top">Back to top</a>
+        <a href="/docs/FEATURES.md">Docs</a>
+        <a href="/api/repositories">API</a>
+      </div>
+    </footer>
+
+    <script src="/app.js" defer></script>
+  </body>
 </html>

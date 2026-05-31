@@ -1,67 +1,120 @@
-async function fetchData() {
-    try {
-        const [reposResponse, leaderboardResponse] = await Promise.all([
-            fetch('/api/repositories'),
-            fetch('/api/leaderboard')
-        ]);
+const themeKey = 'gitcord-theme';
 
-        const repos = await reposResponse.json();
-        const leaderboard = await leaderboardResponse.json();
+function getPreferredTheme() {
+  return localStorage.getItem(themeKey) || 'dark';
+}
 
-        renderRepos(repos);
-        renderLeaderboard(leaderboard);
-        renderStats(repos, leaderboard);
-        document.getElementById('status').textContent = 'System Online • ' + new Date().toLocaleTimeString();
-    } catch (error) {
-        console.error('Error fetching data:', error);
-        document.getElementById('status').textContent = 'System Error';
-    }
+function applyTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  localStorage.setItem(themeKey, theme);
+}
+
+function setRevealAnimations() {
+  const elements = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    },
+    { threshold: 0.15 },
+  );
+
+  elements.forEach((element) => observer.observe(element));
+}
+
+function pickName(item, fallback) {
+  return item?.username || item?.name || item?.fullName || item?.title || fallback;
 }
 
 function renderRepos(repos) {
-    const list = document.getElementById('repo-list');
-    list.innerHTML = repos.map(repo => `
-        <tr class="border-t border-zinc-800">
-            <td class="p-4 font-medium">${repo.fullName}</td>
-            <td class="p-4 text-zinc-400 font-mono text-sm">${repo.channelId}</td>
-        </tr>
-    `).join('');
-}
+  const list = document.getElementById('repo-list');
 
-function renderLeaderboard(contributors) {
-    const list = document.getElementById('contributor-list');
-    list.innerHTML = contributors.map((c, i) => `
-        <div class="flex items-center justify-between mb-4 last:mb-0">
-            <div class="flex items-center gap-3">
-                <span class="text-zinc-500 font-mono w-4">${i + 1}</span>
-                <img src="${c.avatarUrl || 'https://github.com/identicons/gitcord.png'}" class="w-8 h-8 rounded-full border border-zinc-700">
-                <span class="font-medium">${c.username}</span>
-            </div>
-            <div class="flex gap-4 text-xs font-mono">
-                <span class="text-green-500">${c.commits} C</span>
-                <span class="text-indigo-400">${c.prs} PR</span>
-            </div>
+  if (!Array.isArray(repos) || repos.length === 0) {
+    list.innerHTML = '<li class="placeholder">No repositories registered yet.</li>';
+    return;
+  }
+
+  list.innerHTML = repos.slice(0, 5).map((repo) => {
+    const meta = [repo.status, repo.category].filter(Boolean).join(' • ');
+    return `
+      <li>
+        <div>
+          <strong>${repo.fullName}</strong>
+          <div class="meta">${repo.channelId}</div>
         </div>
-    `).join('');
+        <span class="meta">${meta || 'Showcase ready'}</span>
+      </li>
+    `;
+  }).join('');
 }
 
-function renderStats(repos, contributors) {
-    const container = document.getElementById('stats');
-    const totalCommits = contributors.reduce((acc, c) => acc + c.commits, 0);
-    
-    const stats = [
-        { label: 'Active Repositories', value: repos.length, color: 'text-indigo-500' },
-        { label: 'Total Contributors', value: contributors.length, color: 'text-green-500' },
-        { label: 'Total Commits', value: totalCommits, color: 'text-orange-500' }
-    ];
+function renderLeaderboard(entries) {
+  const list = document.getElementById('leaderboard-list');
 
-    container.innerHTML = stats.map(s => `
-        <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-lg">
-            <p class="text-sm text-zinc-400 mb-1">${s.label}</p>
-            <p class="text-3xl font-bold ${s.color}">${s.value}</p>
+  if (!Array.isArray(entries) || entries.length === 0) {
+    list.innerHTML = '<li class="placeholder">No leaderboard entries yet.</li>';
+    return;
+  }
+
+  list.innerHTML = entries.slice(0, 5).map((entry, index) => {
+    const label = pickName(entry, `Entry ${index + 1}`);
+    const score = entry.reputation ?? entry.score ?? entry.points ?? entry.commits ?? entry.prs ?? 0;
+    return `
+      <li>
+        <div>
+          <strong>${index + 1}. ${label}</strong>
+          <div class="meta">${entry.tier || entry.category || 'Community ranking'}</div>
         </div>
-    `).join('');
+        <span class="meta">${score}</span>
+      </li>
+    `;
+  }).join('');
 }
 
+function renderStats(repos, entries) {
+  const repoCount = Array.isArray(repos) ? repos.length : 0;
+  const leaderboardCount = Array.isArray(entries) ? entries.length : 0;
+
+  document.querySelector('[data-live-stat="repos"]').textContent = String(repoCount);
+  document.querySelector('[data-live-stat="leaders"]').textContent = String(leaderboardCount);
+}
+
+async function fetchData() {
+  try {
+    const [reposResponse, leaderboardResponse] = await Promise.all([
+      fetch('/api/repositories'),
+      fetch('/api/leaderboard'),
+    ]);
+
+    const repos = reposResponse.ok ? await reposResponse.json() : [];
+    const leaderboard = leaderboardResponse.ok ? await leaderboardResponse.json() : [];
+
+    renderRepos(repos);
+    renderLeaderboard(leaderboard);
+    renderStats(repos, leaderboard);
+  } catch (error) {
+    console.error('Failed to load landing page data:', error);
+    renderRepos([]);
+    renderLeaderboard([]);
+    renderStats([], []);
+  }
+}
+
+function setupThemeToggle() {
+  const button = document.getElementById('theme-toggle');
+  applyTheme(getPreferredTheme());
+
+  button.addEventListener('click', () => {
+    const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+    applyTheme(next);
+  });
+}
+
+setupThemeToggle();
+setRevealAnimations();
 fetchData();
-setInterval(fetchData, 30000);
+setInterval(fetchData, 60000);
