@@ -39,6 +39,15 @@ app.use(express.json({
 }));
 // Serve static files for the dashboard
 app.use(express.static(path.join(__dirname, '../public')));
+app.get('/dashboard', (_req, res) => {
+    res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+app.get('/status', (_req, res) => {
+    res.redirect('/#live');
+});
+app.get('/profile', (_req, res) => {
+    res.redirect('/#features');
+});
 // API Routes for Dashboard
 app.get('/api/repositories', async (req, res) => {
     try {
@@ -57,6 +66,19 @@ app.get('/api/leaderboard', async (req, res) => {
     catch (error) {
         res.status(500).json({ error: 'Failed to fetch leaderboard' });
     }
+});
+app.get('/api/site-meta', (_req, res) => {
+    const clientId = process.env.DISCORD_CLIENT_ID;
+    const inviteUrl = clientId
+        ? `https://discord.com/oauth2/authorize?client_id=${clientId}&permissions=8&scope=bot%20applications.commands`
+        : null;
+    res.json({
+        inviteUrl,
+        dashboardUrl: '/dashboard',
+        profileUrl: '/profile',
+        botStatus: client.isReady() ? 'ONLINE' : 'STARTING',
+        botName: client.user?.username || 'GitCord',
+    });
 });
 // Webhook Route
 app.post('/webhooks/github', async (req, res) => {
