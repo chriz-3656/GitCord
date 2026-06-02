@@ -11,10 +11,9 @@
     <link rel="stylesheet" href="/style.css" />
   </head>
   <body>
-    <div class="bg-orb bg-orb-a"></div>
-    <div class="bg-orb bg-orb-b"></div>
+    <div class="swiss-noise"></div>
 
-    <header class="header">
+    <header class="header swiss-grid-pattern">
       <a class="brand" href="#top">
         <span class="brand-mark">G</span>
         <span>
@@ -23,30 +22,30 @@
         </span>
       </a>
 
-      <nav class="nav">
+      <nav class="nav" aria-label="Primary">
         <a href="#features">Features</a>
         <a href="#workflow">Workflow</a>
         <a href="#commands">Commands</a>
         <a href="#live">Live data</a>
         <a href="#security">Security</a>
-        <button id="theme-toggle" class="ghost-button" type="button">Toggle theme</button>
+        <a class="cta-link" href="/docs/SETUP.md">Read docs</a>
       </nav>
     </header>
 
     <main id="top" class="page">
-      <section class="hero reveal">
+      <section class="hero swiss-grid-pattern reveal">
         <div class="hero-copy">
-          <p class="eyebrow">Lightweight • Fast • Discord-first</p>
-          <h1>Turn GitHub repos into a living community inside Discord.</h1>
+          <p class="section-index">01 / SYSTEM</p>
+          <h1>GITCORD</h1>
+          <p class="hero-subtitle">Discord-native infrastructure for GitHub communities.</p>
           <p class="lead">
             GitCord connects webhooks, showcase cards, contributor reputation, smart
-            notifications, live feeds, and security alerts into one clean developer collaboration
-            layer.
+            notifications, live feeds, and security alerts into one objective collaboration layer.
           </p>
 
           <div class="cta-row">
-            <a class="primary-button" href="#workflow">See how it works</a>
-            <a class="secondary-button" href="#commands">Browse commands</a>
+            <a class="primary-button" href="#workflow">How it works</a>
+            <a class="secondary-button" href="#commands">Commands</a>
           </div>
 
           <ul class="hero-points">
@@ -57,29 +56,24 @@
           </ul>
         </div>
 
-        <aside class="hero-panel">
-          <div class="panel-card accent">
-            <span class="panel-label">Platform status</span>
-            <strong>Production-ready architecture</strong>
-            <p>Modular TypeScript services, Prisma data model, Discord.js UI, and webhook relay.</p>
+        <aside class="hero-figure" aria-label="Platform summary">
+          <div class="figure-panel figure-panel-large swiss-dots">
+            <span class="figure-label">Live system</span>
+            <strong>Community signal</strong>
+            <p>Webhooks / showcases / reputation / alerts</p>
           </div>
-          <div class="panel-grid">
-            <article class="mini-card">
-              <span>Showcase</span>
-              <strong>Rich project cards</strong>
-            </article>
-            <article class="mini-card">
-              <span>Security</span>
-              <strong>Severity-based alerts</strong>
-            </article>
-            <article class="mini-card">
-              <span>Discovery</span>
-              <strong>Leaderboards & feeds</strong>
-            </article>
-            <article class="mini-card">
-              <span>Profiles</span>
-              <strong>Reputation & badges</strong>
-            </article>
+
+          <div class="figure-composition">
+            <span class="figure-block block-a"></span>
+            <span class="figure-block block-b"></span>
+            <span class="figure-block block-c"></span>
+            <span class="figure-block block-d"></span>
+          </div>
+
+          <div class="figure-panel figure-panel-small swiss-diagonal">
+            <span class="figure-label">Live data</span>
+            <strong data-live-stat="repos">--</strong>
+            <p>registered repositories</p>
           </div>
         </aside>
       </section>
@@ -87,30 +81,31 @@
       <section class="stats reveal" aria-label="Live metrics">
         <article class="stat-card">
           <span>Registered repos</span>
-          <strong data-live-stat="repos">--</strong>
+          <strong data-live-stat="repos-count">--</strong>
         </article>
         <article class="stat-card">
           <span>Leaderboard entries</span>
           <strong data-live-stat="leaders">--</strong>
         </article>
         <article class="stat-card">
-          <span>Components V2 cards</span>
-          <strong>7+</strong>
-        </article>
-        <article class="stat-card">
           <span>Core focus</span>
           <strong>Community growth</strong>
+        </article>
+        <article class="stat-card">
+          <span>UI system</span>
+          <strong>Swiss International</strong>
         </article>
       </section>
 
       <section id="features" class="section reveal">
         <div class="section-heading">
-          <p class="eyebrow">Features</p>
-          <h2>Everything a GitHub community needs, without heavy frontend baggage.</h2>
+          <p class="section-index">02 / FEATURES</p>
+          <h2>Structured communication for GitHub communities.</h2>
         </div>
 
         <div class="feature-grid">
           <article class="feature-card">
+            <span class="card-number">01</span>
             <h3>Project showcases</h3>
             <p>
               Public previews for everyone, full interactive cards for registered repos, and
@@ -118,6 +113,7 @@
             </p>
           </article>
           <article class="feature-card">
+            <span class="card-number">02</span>
             <h3>Smart engagement</h3>
             <p>
               Likes, follows, bookmarks, interested contributors, comments, and cooldown-based
@@ -125,6 +121,7 @@
             </p>
           </article>
           <article class="feature-card">
+            <span class="card-number">03</span>
             <h3>Leaderboards & reputation</h3>
             <p>
               Weighted rankings for contributors and projects, plus profiles with badges, streaks,
@@ -132,6 +129,7 @@
             </p>
           </article>
           <article class="feature-card">
+            <span class="card-number">04</span>
             <h3>Security monitoring</h3>
             <p>
               Detect exposed secrets, dangerous file changes, suspicious commits, and other
@@ -142,10 +140,11 @@
       </section>
 
       <section id="workflow" class="section reveal split">
-        <div>
-          <p class="eyebrow">Workflow</p>
+        <div class="section-heading">
+          <p class="section-index">03 / METHOD</p>
           <h2>Simple for users, controlled for admins.</h2>
         </div>
+
         <div class="workflow-steps">
           <article>
             <span>01</span>
@@ -172,8 +171,8 @@
             <div>
               <h3>Community actions flow in</h3>
               <p>
-                Followers, comments, leaderboard points, release posts, and security alerts all
-                feed back into the community.
+                Followers, comments, leaderboard points, release posts, and security alerts all feed
+                back into the community.
               </p>
             </div>
           </article>
@@ -182,11 +181,11 @@
 
       <section id="commands" class="section reveal">
         <div class="section-heading">
-          <p class="eyebrow">Commands</p>
+          <p class="section-index">04 / COMMANDS</p>
           <h2>Core bot commands at a glance.</h2>
         </div>
 
-        <div class="command-table">
+        <div class="command-table swiss-dots">
           <div><code>/register-repo</code><span>Admin-only repository registration</span></div>
           <div><code>/showcase</code><span>Publish project cards and previews</span></div>
           <div><code>/leaderboard</code><span>Rank contributors and projects</span></div>
@@ -197,9 +196,9 @@
       </section>
 
       <section id="live" class="section reveal split">
-        <div>
-          <p class="eyebrow">Live data</p>
-          <h2>Surface real community data without adding frontend weight.</h2>
+        <div class="section-heading">
+          <p class="section-index">05 / LIVE DATA</p>
+          <h2>Surface real community data without extra weight.</h2>
           <p class="section-copy">
             This page reads from the same repository and leaderboard APIs used by the bot, so the
             homepage stays current while remaining fast and simple.
@@ -207,13 +206,13 @@
         </div>
 
         <div class="live-panel">
-          <article class="live-card">
+          <article class="live-card swiss-grid-pattern">
             <h3>Top repositories</h3>
             <ul id="repo-list" class="live-list">
               <li class="placeholder">Loading repositories…</li>
             </ul>
           </article>
-          <article class="live-card">
+          <article class="live-card swiss-diagonal">
             <h3>Top contributors</h3>
             <ul id="leaderboard-list" class="live-list">
               <li class="placeholder">Loading leaderboard…</li>
@@ -224,7 +223,7 @@
 
       <section id="security" class="section reveal">
         <div class="section-heading">
-          <p class="eyebrow">Security & reliability</p>
+          <p class="section-index">06 / TRUST</p>
           <h2>Built for safe webhook handling and scalable communities.</h2>
         </div>
 
