@@ -83,6 +83,31 @@ function renderStats(repos, entries) {
   if (leaderboardStat) leaderboardStat.textContent = String(leaderboardCount);
 }
 
+async function fetchSiteMeta() {
+  try {
+    const response = await fetch('/api/site-meta');
+    if (!response.ok) return;
+
+    const meta = await response.json();
+    document.querySelectorAll('[data-site-link="invite"]').forEach((link) => {
+      if (meta.inviteUrl) link.href = meta.inviteUrl;
+    });
+    document.querySelectorAll('[data-site-link="dashboard"]').forEach((link) => {
+      if (meta.dashboardUrl) link.href = meta.dashboardUrl;
+    });
+    document.querySelectorAll('[data-site-link="profile"]').forEach((link) => {
+      if (meta.profileUrl) link.href = meta.profileUrl;
+    });
+
+    const brandSmall = document.querySelector('.brand small');
+    if (brandSmall && meta.botStatus) {
+      brandSmall.textContent = meta.botStatus;
+    }
+  } catch (error) {
+    console.error('Failed to load site metadata:', error);
+  }
+}
+
 async function fetchData() {
   try {
     const [reposResponse, leaderboardResponse] = await Promise.all([
@@ -105,5 +130,6 @@ async function fetchData() {
 }
 
 setRevealAnimations();
+fetchSiteMeta();
 fetchData();
 setInterval(fetchData, 60000);
